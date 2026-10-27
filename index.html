@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Juego de fiesta del Impostor para jugar pasando un solo teléfono.">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font: 14px system-ui, -apple-system, "Segoe UI", sans-serif; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Impostor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500;600&family=Saira+Stencil+One&display=swap">
+<style>
+/* Layout: one phone-width column. Each phase is a full screen with its main action pinned to a bottom bar.
+   World: police lineup wall (height-chart stripes), case files with redactions, rubber stamps. */
+:root {
+  --bg: #E3E8E5;
+  --surface: #F7F8F6;
+  --surface-2: #D4DBD7;
+  --ink: #141A1D;
+  --muted: #55615E;
+  --line: #B9C3BE;
+  --chart: #CDD5D1;
+  --chart-strong: #AEB9B4;
+  --accent: #F3C32F;
+  --accent-edge: #B58E12;
+  --accent-soft: #F7E3A3;
+  --on-accent: #141A1D;
+  --mark: #F3C32F;
+  --red: #C2352A;
+  --blue: #2858AD;
+  --ok: #2E7D4F;
+  --scrim: rgba(12, 16, 18, .55);
+  --p0: #D9822B; --p1: #3E8E7E; --p2: #7A5CC4; --p3: #C94F7C;
+  --p4: #4C7FD1; --p5: #8C9A2E; --p6: #B5483B; --p7: #2F9BC4;
+
+  --f-display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --f-stamp: "Saira Stencil One", "Archivo", Impact, sans-serif;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161A; --surface: #1B2226; --surface-2: #263036; --ink: #E7ECE9; --muted: #98A4A0;
+    --line: #34413F; --chart: #222B2F; --chart-strong: #34403F;
+    --accent: #F3C32F; --accent-edge: #9C7A0E; --accent-soft: #4A3F17; --on-accent: #141A1D; --mark: #6B5714;
+    --red: #F0675A; --blue: #82A7F0; --ok: #5BC08A; --scrim: rgba(0, 0, 0, .65);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11161A; --surface: #1B2226; --surface-2: #263036; --ink: #E7ECE9; --muted: #98A4A0;
+  --line: #34413F; --chart: #222B2F; --chart-strong: #34403F;
+  --accent: #F3C32F; --accent-edge: #9C7A0E; --accent-soft: #4A3F17; --on-accent: #141A1D; --mark: #6B5714;
+  --red: #F0675A; --blue: #82A7F0; --ok: #5BC08A; --scrim: rgba(0, 0, 0, .65);
+  color-scheme: dark;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 1rem;
+  line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-tap-highlight-color: transparent;
+}
+* { box-sizing: border-box; }
+p, h1, h2, h3, ol, ul, dl, dd { margin: 0; }
+ol, ul { padding: 0; list-style: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+#app { min-height: 100%; }
+.screen { min-height: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; }
+.content { flex: 1; display: flex; flex-direction: column; gap: 16px; padding-block: 20px 12px; }
+.content.center { justify-content: center; align-items: center; text-align: center; }
+
+/* ---------- Type ---------- */
+.eyebrow, .label {
+  font-family: var(--f-mono); font-weight: 600; font-size: .75rem;
+  text-transform: uppercase; letter-spacing: .12em; color: var(--muted);
+}
+.h {
+  font-family: var(--f-display); font-weight: 900; font-stretch: 75%;
+  text-transform: uppercase; font-size: clamp(2.2rem, 10vw, 3.2rem);
+  line-height: .95; letter-spacing: -.005em; text-wrap: balance; overflow-wrap: anywhere;
+}
+.hl { box-shadow: inset 0 -.32em 0 var(--mark); padding-inline: .04em; }
+.lead { font-size: 1.15rem; color: var(--muted); }
+.muted { color: var(--muted); }
+.hint { font-size: .875rem; color: var(--muted); }
+.copy { font-size: 1.05rem; max-width: 40ch; text-wrap: pretty; }
+
+.wordmark {
+  font-family: var(--f-display); font-weight: 900; font-stretch: 66%;
+  font-size: clamp(3.8rem, 20vw, 5.8rem); line-height: .82; letter-spacing: .005em;
+  text-transform: uppercase; color: var(--ink); display: block;
+}
+.wordmark span, .wm-mini span { display: inline-block; }
+.wordmark .odd, .wm-mini .odd { color: var(--red); transform: translateY(.07em) rotate(11deg); }
+.wordmark .odd { animation: odd-drop .7s .2s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes odd-drop {
+  from { transform: translateY(-.35em) rotate(-24deg); }
+  to { transform: translateY(.07em) rotate(11deg); }
+}
+.wm-mini { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 1.2rem; letter-spacing: .02em; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; min-height: 56px; padding: 10px 18px;
+  border-radius: 12px; border: 2px solid var(--line); background: transparent; color: var(--ink);
+  font-family: var(--f-display); font-weight: 800; font-stretch: 82%;
+  font-size: 1.15rem; letter-spacing: .03em; text-transform: uppercase; text-align: center;
+  line-height: 1.1; overflow-wrap: anywhere;
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+.btn.primary {
+  background: var(--accent); color: var(--on-accent); border-color: var(--accent);
+  box-shadow: 0 4px 0 var(--accent-edge);
+}
+.btn.primary:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--accent-edge); }
+.btn.primary:disabled { background: var(--surface-2); border-color: var(--surface-2); color: var(--muted); box-shadow: none; }
+.btn.big { min-height: 62px; font-size: 1.35rem; }
+.btn.danger { border-color: var(--red); color: var(--red); }
+.btn-text {
+  background: none; border: 0; padding: 8px 2px; font-weight: 700; font-size: .95rem;
+  text-decoration: underline; text-underline-offset: 3px; color: var(--ink);
+}
+
+.actionbar {
+  position: sticky; bottom: 0; z-index: 5;
+  display: grid; gap: 10px;
+  padding-block: 18px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, transparent, var(--bg) 18px);
+}
+
+/* ---------- Setup ---------- */
+.brand { display: flex; flex-direction: column; gap: 10px; padding-block: 28px 4px; }
+.tagline { font-size: 1.15rem; color: var(--muted); max-width: 30ch; }
+.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 16px; display: flex; flex-direction: column; gap: 14px;
+}
+.setrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.setrow + .setrow { border-top: 1px dashed var(--line); padding-top: 14px; }
+.setname { font-weight: 700; font-size: 1.1rem; }
+.stepper { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.stepper output {
+  font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 2rem;
+  min-width: 2.2ch; text-align: center; font-variant-numeric: tabular-nums; line-height: 1;
+}
+.step {
+  width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--ink);
+  background: transparent; font-size: 1.5rem; line-height: 1; font-weight: 700;
+  display: grid; place-items: center; padding: 0;
+}
+.step:disabled { opacity: .3; }
+.step:active:not(:disabled) { background: var(--surface-2); }
+
+.names { display: grid; gap: 8px; }
+.names li { display: flex; align-items: center; gap: 10px; }
+.placard {
+  font-family: var(--f-mono); font-weight: 600; font-size: .78rem; letter-spacing: .04em;
+  background: var(--surface-2); color: var(--ink); border-radius: 3px;
+  padding: 4px 7px 4px 10px; box-shadow: inset 4px 0 0 var(--pc, var(--muted));
+  font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
+.names input {
+  flex: 1; min-width: 0; height: 46px; padding: 0 12px;
+  border: 2px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 1.05rem;
+}
+.names input::placeholder { color: var(--muted); opacity: .8; }
+.names input:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  min-height: 40px; padding: 0 14px; border-radius: 999px; border: 2px solid var(--line);
+  background: transparent; font-weight: 700; font-size: .95rem;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+
+.switch { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; position: relative; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.track {
+  width: 50px; height: 30px; border-radius: 999px; flex-shrink: 0; position: relative;
+  background: var(--surface-2); border: 2px solid var(--line); transition: background .15s;
+}
+.track::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--muted); transition: transform .15s, background .15s;
+}
+.switch input:checked + .track { background: var(--accent); border-color: var(--accent-edge); }
+.switch input:checked + .track::after { transform: translateX(20px); background: var(--on-accent); }
+.switch input:focus-visible + .track { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+.ai { display: flex; align-items: center; gap: 10px; font-size: .92rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 12px; }
+.ai-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: var(--muted); }
+.ai.on .ai-dot { background: var(--ok); }
+.ai.wait .ai-dot { background: var(--accent); animation: pulse 1s ease-in-out infinite alternate; }
+@keyframes pulse { from { opacity: .35; } to { opacity: 1; } }
+
+.howto { border-top: 1px solid var(--line); padding-top: 4px; }
+.howto summary {
+  cursor: pointer; padding-block: 10px; font-family: var(--f-mono); font-weight: 600;
+  font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; color: var(--ink);
+}
+.howto ol { display: grid; gap: 10px; counter-reset: step; padding-bottom: 8px; }
+.howto li { display: grid; grid-template-columns: 2ch 1fr; gap: 10px; color: var(--muted); }
+.howto li::before {
+  counter-increment: step; content: counter(step); font-family: var(--f-display);
+  font-weight: 900; font-stretch: 75%; font-size: 1.3rem; color: var(--ink); line-height: 1.1;
+}
+.howto .win { color: var(--muted); padding-bottom: 12px; }
+
+/* ---------- Game chrome ---------- */
+.gamebar { display: flex; align-items: center; gap: 12px; padding-block: 10px; border-bottom: 1px solid var(--line); }
+.gb-mid {
+  flex: 1; text-align: center; font-family: var(--f-mono); font-size: .75rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .1em; color: var(--muted);
+}
+
+.note { font-size: .92rem; background: var(--accent-soft); color: var(--ink); padding: 10px 14px; border-radius: 10px; max-width: 36ch; }
+
+/* ---------- Pass the phone ---------- */
+.progress { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 280px; }
+.pm { width: 16px; height: 6px; border-radius: 2px; background: var(--surface-2); }
+.pm.done { background: var(--muted); }
+.pm.now { background: var(--accent); }
+.bigname {
+  font-family: var(--f-display); font-weight: 900; font-stretch: 72%; text-transform: uppercase;
+  font-size: clamp(3.2rem, 17vw, 5rem); line-height: .88; overflow-wrap: anywhere; text-wrap: balance;
+  max-width: 100%;
+}
+.bigname::after { content: ""; display: block; width: 1.6em; height: 7px; margin: 14px auto 0; background: var(--pc, var(--accent)); border-radius: 2px; }
+
+/* ---------- Case file (role card) ---------- */
+.file {
+  width: 100%; text-align: left; position: relative;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px 16px 16px 16px;
+  padding: 0 20px 22px; display: flex; flex-direction: column; gap: 6px;
+  box-shadow: 0 22px 40px -28px rgba(0, 0, 0, .5);
+}
+.file-head {
+  display: flex; justify-content: space-between; gap: 10px;
+  font-family: var(--f-mono); font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--red); padding: 12px 20px; margin: 0 -20px 12px; border-bottom: 2px dashed var(--line);
+}
+.agent { font-weight: 700; font-size: 1.2rem; margin-bottom: 10px; overflow-wrap: anywhere; }
+.agent i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--pc); margin-right: 8px; vertical-align: 1px; }
+.secret {
+  font-family: var(--f-display); font-weight: 900; font-stretch: 74%; text-transform: uppercase;
+  font-size: clamp(2.6rem, 13vw, 4rem); line-height: .95; overflow-wrap: anywhere; text-wrap: balance;
+}
+.redacted { display: block; height: .78em; width: 88%; margin-block: .14em; background: var(--ink); border-radius: 2px; transform: rotate(-1.2deg); }
+.file-foot { color: var(--muted); font-size: 1rem; margin-top: 8px; max-width: 36ch; }
+.stamp-wrap { display: flex; justify-content: center; padding-block: 12px 2px; }
+.stamp {
+  display: inline-block; font-family: var(--f-stamp); text-transform: uppercase;
+  font-size: clamp(2.1rem, 11vw, 3.2rem); letter-spacing: .06em; line-height: 1.05;
+  color: var(--red); border: 4px solid currentColor; border-radius: 8px; padding: .06em .32em .02em;
+  transform: rotate(-7deg); opacity: .94;
+  animation: stamp .42s cubic-bezier(.2, .9, .3, 1.25) both;
+}
+.stamp.safe { color: var(--blue); }
+.stamp.xl { font-size: clamp(2.6rem, 14vw, 4.2rem); }
+@keyframes stamp {
+  from { transform: rotate(-7deg) scale(1.9); opacity: 0; }
+  to { transform: rotate(-7deg) scale(1); opacity: .94; }
+}
+.clue { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.clue div { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.clue dt { font-family: var(--f-mono); font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+.clue dd { font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 1.3rem; text-transform: uppercase; overflow-wrap: anywhere; }
+
+/* ---------- Round ---------- */
+.rows { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 4px 14px; }
+.rows li { display: flex; align-items: center; gap: 12px; padding-block: 11px; min-width: 0; }
+.rows li + li { border-top: 1px dashed var(--line); }
+.ord { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); min-width: 2ch; font-variant-numeric: tabular-nums; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--pc); flex-shrink: 0; }
+.pname { font-weight: 700; font-size: 1.05rem; min-width: 0; overflow-wrap: anywhere; }
+.tag {
+  margin-left: auto; flex-shrink: 0; font-family: var(--f-mono); font-size: .7rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .08em; padding: 3px 7px; border-radius: 3px;
+  background: var(--accent); color: var(--on-accent);
+}
+.tag.imp { background: transparent; color: var(--red); box-shadow: inset 0 0 0 1.5px var(--red); }
+.tag.inn { background: transparent; color: var(--blue); box-shadow: inset 0 0 0 1.5px var(--blue); }
+.tag.plain { background: var(--surface-2); color: var(--muted); }
+.out .pname { text-decoration: line-through; color: var(--muted); font-weight: 400; }
+.section { display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- Lineup (vote) ---------- */
+.lineup { display: grid; grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 10px; }
+.suspect {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0;
+  padding: 10px 6px 10px; min-height: 160px; border-radius: 12px;
+  border: 2px solid var(--line); color: var(--ink);
+  background-color: var(--surface);
+  background-image:
+    repeating-linear-gradient(to bottom, transparent 0 46px, var(--chart-strong) 46px 48px),
+    repeating-linear-gradient(to bottom, transparent 0 11px, var(--chart) 11px 12px);
+}
+.sil { width: 62%; height: auto; margin-top: auto; }
+.sil * { fill: var(--pc); }
+.suspect .placard { box-shadow: none; padding: 2px 7px; background: var(--ink); color: var(--surface); }
+.suspect .nm { font-weight: 700; font-size: .95rem; line-height: 1.15; text-align: center; overflow-wrap: anywhere; }
+.suspect[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent); }
+.suspect[aria-pressed="true"] .placard { background: var(--accent); color: var(--on-accent); }
+
+/* ---------- Tally ---------- */
+.tally li { display: grid; grid-template-columns: minmax(0, 1fr) auto 2.4ch; gap: 12px; align-items: center; }
+.tally .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tally .marks { color: var(--muted); display: flex; }
+.tally .n { font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 1.5rem; text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.tally .top .marks, .tally .top .n { color: var(--red); }
+.tally .zero .pname { color: var(--muted); font-weight: 400; }
+
+/* ---------- Loading ---------- */
+.redact-anim { display: flex; gap: 6px; justify-content: center; padding-block: 8px; }
+.redact-anim span { width: 30px; height: 22px; background: var(--ink); border-radius: 2px; animation: redact 1.2s ease-in-out infinite; }
+.redact-anim span:nth-child(2) { animation-delay: .12s; width: 46px; }
+.redact-anim span:nth-child(3) { animation-delay: .24s; }
+.redact-anim span:nth-child(4) { animation-delay: .36s; width: 20px; }
+.redact-anim span:nth-child(5) { animation-delay: .48s; width: 38px; }
+@keyframes redact { 0%, 100% { opacity: 1; } 50% { opacity: .2; } }
+
+/* ---------- Sheet ---------- */
+.scrim { position: fixed; inset: 0; z-index: 20; background: var(--scrim); display: flex; align-items: flex-end; justify-content: center; }
+.sheet {
+  width: 100%; max-width: 560px; background: var(--surface); border-radius: 18px 18px 0 0;
+  padding-top: 22px; padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 12px;
+}
+.sheet h3 { font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 1.9rem; text-transform: uppercase; line-height: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const MIN_P = 3, MAX_P = 15;
+  const TEMAS = ["Cualquiera", "Comida", "Animales", "Lugares", "Objetos", "Profesiones", "Deportes"];
+  const NUM = ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete"];
+  const OFF_CODES = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed", "session_expired"];
+
+  const BANK = `Comida|Pizza|Horno
+Comida|Helado|Frío
+Comida|Sushi|Arroz
+Comida|Taco|Tortilla
+Comida|Chocolate|Dulce
+Comida|Ceviche|Limón
+Comida|Hamburguesa|Pan
+Comida|Palomitas|Cine
+Comida|Empanada|Masa
+Comida|Sopa|Cuchara
+Comida|Huevo frito|Desayuno
+Comida|Queso|Leche
+Comida|Plátano|Amarillo
+Comida|Sandía|Verano
+Comida|Torta de cumpleaños|Velas
+Animales|Pingüino|Hielo
+Animales|Jirafa|Alto
+Animales|Tiburón|Mar
+Animales|Murciélago|Noche
+Animales|Camello|Arena
+Animales|Pulpo|Brazos
+Animales|Loro|Hablar
+Animales|Abeja|Flores
+Animales|Caracol|Lento
+Animales|Llama|Montaña
+Animales|Delfín|Saltar
+Animales|Búho|Ojos
+Animales|Cocodrilo|Río
+Animales|Hormiga|Pequeña
+Animales|Canguro|Bolsa
+Lugares|Playa|Toalla
+Lugares|Hospital|Bata
+Lugares|Aeropuerto|Maleta
+Lugares|Biblioteca|Silencio
+Lugares|Gimnasio|Sudor
+Lugares|Cementerio|Flores
+Lugares|Cine|Butaca
+Lugares|Supermercado|Carrito
+Lugares|Discoteca|Música
+Lugares|Zoológico|Jaula
+Lugares|Iglesia|Campana
+Lugares|Escuela|Recreo
+Lugares|Estadio|Gritos
+Lugares|Parque de diversiones|Fila
+Lugares|Farmacia|Receta
+Objetos|Paraguas|Clima
+Objetos|Espejo|Reflejo
+Objetos|Reloj|Tiempo
+Objetos|Llave|Puerta
+Objetos|Almohada|Sueño
+Objetos|Tijeras|Papel
+Objetos|Vela|Luz
+Objetos|Mochila|Espalda
+Objetos|Linterna|Pilas
+Objetos|Escoba|Piso
+Objetos|Guitarra|Cuerdas
+Objetos|Cepillo de dientes|Mañana
+Objetos|Bicicleta|Ruedas
+Objetos|Globo|Fiesta
+Objetos|Anteojos|Ver
+Profesiones|Bombero|Rojo
+Profesiones|Dentista|Sonrisa
+Profesiones|Piloto|Nubes
+Profesiones|Chef|Cuchillo
+Profesiones|Astronauta|Casco
+Profesiones|Mago|Sombrero
+Profesiones|Cartero|Sobres
+Profesiones|Payaso|Nariz
+Profesiones|Peluquero|Espejo
+Profesiones|Detective|Lupa
+Profesiones|Panadero|Madrugada
+Profesiones|Salvavidas|Silbato
+Profesiones|Jardinero|Tierra
+Profesiones|Profesor|Pizarra
+Profesiones|Veterinario|Mascotas
+Deportes|Fútbol|Pelota
+Deportes|Natación|Gorro
+Deportes|Boxeo|Guantes
+Deportes|Tenis|Red
+Deportes|Ajedrez|Reina
+Deportes|Surf|Olas
+Deportes|Esquí|Nieve
+Deportes|Básquet|Aro
+Deportes|Ciclismo|Casco
+Deportes|Golf|Hoyo
+Deportes|Karate|Cinturón
+Deportes|Bolos|Pinos
+Deportes|Vóley|Malla
+Deportes|Escalada|Cuerda
+Deportes|Maratón|Agua`.split("\n").map(l => { const [t, w, h] = l.split("|"); return { t, w, h }; });
+
+  /* ---------- Utilities ---------- */
+  const $app = document.getElementById("app");
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const norm = s => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  const rnd = n => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; };
+  const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const pl = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const maxImp = n => Math.max(1, Math.floor((n - 1) / 2));
+  const clean = (s, max) => (typeof s === "string" ? s.replace(/\s+/g, " ").trim() : "").slice(0, max);
+  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const joinY = arr => arr.length < 2 ? arr.join("") : arr.slice(0, -1).join(", ") + " y " + arr[arr.length - 1];
+
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } }
+  };
+
+  /* ---------- State ---------- */
+  let S = Object.assign({ count: 4, impostors: 1, names: [], tema: "Cualquiera", pista: false }, store.get("impostor.settings", {}));
+  S.count = Math.min(MAX_P, Math.max(MIN_P, Number(S.count) || 4));
+  S.impostors = Math.min(maxImp(S.count), Math.max(1, Number(S.impostors) || 1));
+  if (!Array.isArray(S.names)) S.names = [];
+  if (!TEMAS.includes(S.tema)) S.tema = "Cualquiera";
+  S.pista = !!S.pista;
+
+  let G = null;
+  let screen = "setup";
+  let lastScreen = null;
+  let confirmExit = false;
+  let focusAfter = null;
+  let sampleFn;            // undefined: comprobando · null: no disponible · función: IA lista
+  let aiOff = false;
+  let ctl = null;
+  let gameToken = 0;
+
+  const saveS = () => store.set("impostor.settings", S);
+  const recent = () => { const r = store.get("impostor.recent", []); return Array.isArray(r) ? r : []; };
+  const pushRecent = w => { const r = recent().filter(x => norm(x) !== norm(w)); r.unshift(w); store.set("impostor.recent", r.slice(0, 40)); };
+
+  const samplePromise = (window.claude && typeof window.claude.use === "function")
+    ? window.claude.use("sample").catch(() => null)
+    : Promise.resolve(null);
+  samplePromise.then(fn => { sampleFn = fn || null; updateAiLine(); });
+
+  /* ---------- Word selection ---------- */
+  function localWord() {
+    const r = new Set(recent().map(norm));
+    const pool = BANK.filter(b => S.tema === "Cualquiera" || b.t === S.tema);
+    let fresh = pool.filter(b => !r.has(norm(b.w)));
+    if (!fresh.length) fresh = pool;
+    const b = fresh[rnd(fresh.length)];
+    return { w: b.w, c: b.t, h: b.h, src: "local" };
+  }
+
+  async function aiWord(signal) {
+    const avoid = recent().slice(0, 30);
+    const tema = S.tema === "Cualquiera" ? "libre: cosas de la vida diaria, de cualquier categoría" : S.tema;
+    const seed = Math.random().toString(36).slice(2, 8);
+    const prompt =
+`Estás preparando una partida del juego de fiesta "Impostor". Todos los jugadores menos el impostor reciben la misma palabra secreta y, por turnos, dicen una sola palabra relacionada con ella. El impostor no la conoce y tiene que disimular.
+
+Propón 8 palabras secretas distintas, en español.
+- Tema: ${tema}.
+- Sustantivos comunes y concretos que cualquier persona hispanohablante conozca, de una o dos palabras.
+- Ni demasiado obvias ni rebuscadas: que se puedan describir de muchas maneras.
+- Sin nombres de personas ni marcas, y nada ofensivo.
+- Variadas entre sí${S.tema === "Cualquiera" ? ", de categorías diferentes" : ""}.
+- No uses ninguna de estas: ${avoid.length ? avoid.join(", ") : "(ninguna)"}.
+Para cada una indica su categoría (una o dos palabras) y una pista: una palabra relacionada pero vaga que ayude al impostor a disimular sin delatar la palabra.
+Código de partida: ${seed}
+
+Responde solo con un arreglo JSON, por ejemplo:
+[{"palabra":"Paraguas","categoria":"Objetos","pista":"Clima"}]`;
+
+    const out = await sampleFn.json(prompt, { modelTier: "quick", cache: false, signal });
+    const arr = Array.isArray(out) ? out : (out && Array.isArray(out.palabras) ? out.palabras : []);
+    const r = new Set(avoid.map(norm));
+    const list = arr
+      .map(o => ({ w: cap(clean(o && o.palabra, 30)), c: cap(clean(o && o.categoria, 24)), h: cap(clean(o && o.pista, 24)) }))
+      .filter(o => o.w && !r.has(norm(o.w)));
+    if (!list.length) throw { code: "empty_completion" };
+    const pick = list[rnd(list.length)];
+    if (!pick.c) pick.c = S.tema === "Cualquiera" ? "Libre" : S.tema;
+    if (!pick.h || norm(pick.h) === norm(pick.w)) pick.h = pick.c;
+    pick.src = "ai";
+    return pick;
+  }
+
+  /* ---------- Game flow ---------- */
+  function finalNames() {
+    const seen = {};
+    return Array.from({ length: S.count }, (_, i) => {
+      const base = clean(S.names[i], 16) || `Jugador ${i + 1}`;
+      const k = norm(base);
+      seen[k] = (seen[k] || 0) + 1;
+      return seen[k] > 1 ? `${base} ${seen[k]}` : base;
+    });
+  }
+
+  async function startGame() {
+    const token = ++gameToken;
+    const names = finalNames();
+    const players = names.map((name, i) => ({ id: i, name, color: i % 8 }));
+    G = {
+      players,
+      impostors: shuffle(players.map(p => p.id)).slice(0, S.impostors),
+      alive: players.map(p => p.id),
+      pista: S.pista,
+      exp: String(1000 + rnd(9000)),
+      round: 1, revealIdx: 0, starter: 0,
+      voters: [], voteIdx: 0, votes: {}, candidates: [], runoff: false, sel: null,
+      tally: [], top: [], history: [], last: null, winner: null,
+      word: "", cat: "", hint: "", src: "local", note: ""
+    };
+    confirmExit = false;
+
+    if (sampleFn === undefined) {
+      screen = "loading"; render();
+      await Promise.race([samplePromise, new Promise(r => setTimeout(r, 2500))]);
+      if (token !== gameToken) return;
+    }
+
+    let pick = null;
+    if (sampleFn && !aiOff) {
+      screen = "loading"; render();
+      ctl = new AbortController();
+      try {
+        pick = await aiWord(ctl.signal);
+      } catch (e) {
+        const code = e && e.code;
+        if (OFF_CODES.includes(code)) {
+          aiOff = true;
+          if (code === "not_granted") G.note = "Sin permiso para usar la IA: la palabra salió de la lista incluida.";
+          else G.note = "La IA no está disponible: la palabra salió de la lista incluida.";
+        } else if (code !== "cancelled") {
+          G.note = "La IA no respondió a tiempo: la palabra salió de la lista incluida.";
+        }
+      }
+      ctl = null;
+      if (token !== gameToken) return;
+    }
+    if (!pick) pick = localWord();
+
+    G.word = pick.w; G.cat = pick.c; G.hint = pick.h; G.src = pick.src;
+    pushRecent(pick.w);
+    screen = "pass";
+    render();
+  }
+
+  function roundOrder() {
+    const alive = G.alive.slice().sort((a, b) => a - b);
+    const k = Math.max(0, alive.indexOf(G.starter));
+    return alive.slice(k).concat(alive.slice(0, k));
+  }
+
+  function startRound() {
+    G.starter = G.alive[rnd(G.alive.length)];
+    screen = "round";
+  }
+
+  function startVote(cands, runoff) {
+    G.candidates = cands.slice();
+    G.runoff = runoff;
+    G.voters = roundOrder();
+    G.voteIdx = 0; G.votes = {}; G.sel = null;
+    screen = "votePass";
+  }
+
+  function finishVote() {
+    const counts = {};
+    G.candidates.forEach(c => { counts[c] = 0; });
+    Object.values(G.votes).forEach(t => { if (t in counts) counts[t]++; });
+    const rows = G.candidates.map(id => ({ id, n: counts[id] })).sort((a, b) => b.n - a.n || a.id - b.id);
+    const max = rows[0].n;
+    G.tally = rows;
+    G.top = rows.filter(r => r.n === max).map(r => r.id);
+    screen = "tally";
+  }
+
+  function eliminate() {
+    const id = G.top[0];
+    const imp = G.impostors.includes(id);
+    const votes = G.tally[0].n;
+    G.alive = G.alive.filter(x => x !== id);
+    G.history.push({ round: G.round, id, imp, votes });
+    G.last = { id, imp, votes };
+    const impAlive = G.alive.filter(x => G.impostors.includes(x)).length;
+    const civ = G.alive.length - impAlive;
+    G.winner = impAlive === 0 ? "civ" : (impAlive >= civ ? "imp" : null);
+    screen = "reveal";
+  }
+
+  /* ---------- Views ---------- */
+  const pcs = id => `--pc: var(--p${G.players[id].color})`;
+  const P = id => G.players[id];
+
+  function wordmark(cls) {
+    return "IMPOSTOR".split("").map((ch, i) => `<span class="${i === 6 ? "odd" : ""}" aria-hidden="true">${ch}</span>`).join("");
+  }
+
+  function aiState() { return sampleFn === undefined ? "wait" : (sampleFn && !aiOff ? "on" : "off"); }
+  function aiText() {
+    const s = aiState();
+    if (s === "wait") return "Conectando con la IA…";
+    if (s === "on") return "La IA elige una palabra nueva en cada partida.";
+    return "La IA no está disponible aquí: la palabra saldrá de la lista incluida.";
+  }
+  function updateAiLine() {
+    const el = document.querySelector(".ai");
+    if (el) { el.className = "ai " + aiState(); el.innerHTML = `<span class="ai-dot" aria-hidden="true"></span><span>${aiText()}</span>`; }
+  }
+
+  function stepper(k, val, decDis, incDis, noun) {
+    return `<div class="stepper">
+      <button type="button" class="step" id="dec-${k}" data-a="dec-${k}" ${decDis ? "disabled" : ""} aria-label="Quitar un ${noun}">−</button>
+      <output aria-live="polite">${val}</output>
+      <button type="button" class="step" id="inc-${k}" data-a="inc-${k}" ${incDis ? "disabled" : ""} aria-label="Añadir un ${noun}">+</button>
+    </div>`;
+  }
+
+  function gamebar(mid) {
+    return `<div class="gamebar">
+      <span class="wm-mini" aria-hidden="true">${wordmark()}</span>
+      <span class="gb-mid">${mid}</span>
+      <button type="button" class="btn-text" data-a="exit">Salir</button>
+    </div>`;
+  }
+
+  function vSetup() {
+    const n = S.count, mi = maxImp(n);
+    S.impostors = Math.min(S.impostors, mi);
+    const names = Array.from({ length: n }, (_, i) => `
+      <li>
+        <span class="placard" style="--pc: var(--p${i % 8})">N.º ${String(i + 1).padStart(2, "0")}</span>
+        <input id="name-${i}" data-name="${i}" type="text" maxlength="16" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="next"
+          placeholder="Jugador ${i + 1}" value="${esc(S.names[i] || "")}" aria-label="Nombre del jugador ${i + 1}">
+      </li>`).join("");
+    const chips = TEMAS.map(t => `<button type="button" class="chip" id="tema-${t}" data-a="tema" data-v="${t}" aria-pressed="${S.tema === t}">${t === "Cualquiera" ? "Sorpréndeme" : t}</button>`).join("");
+    return `<div class="screen">
+      <header class="brand">
+        <p class="eyebrow">Juego de fiesta · ${n} jugadores</p>
+        <h1 class="wordmark" aria-label="Impostor">${wordmark()}</h1>
+        <p class="tagline">Todos conocen la palabra secreta. Menos ${NUM[S.impostors]}.</p>
+      </header>
+      <main class="content">
+        <section class="panel" aria-labelledby="h-partida">
+          <h2 class="label" id="h-partida">La partida</h2>
+          <div class="setrow">
+            <div><p class="setname">Jugadores</p><p class="hint">De ${MIN_P} a ${MAX_P}</p></div>
+            ${stepper("p", n, n <= MIN_P, n >= MAX_P, "jugador")}
+          </div>
+          <div class="setrow">
+            <div><p class="setname">Impostores</p><p class="hint">${mi === 1 ? `Con ${n} jugadores, solo 1` : `Hasta ${mi} con ${n} jugadores`}</p></div>
+            ${stepper("i", S.impostors, S.impostors <= 1, S.impostors >= mi, "impostor")}
+          </div>
+        </section>
+        <section class="panel" aria-labelledby="h-nombres">
+          <h2 class="label" id="h-nombres">Nombres</h2>
+          <ol class="names">${names}</ol>
+        </section>
+        <section class="panel" aria-labelledby="h-palabra">
+          <h2 class="label" id="h-palabra">Palabra secreta</h2>
+          <div class="chips" role="group" aria-label="Tema de la palabra">${chips}</div>
+          <label class="switch" for="opt-pista">
+            <input type="checkbox" id="opt-pista" ${S.pista ? "checked" : ""}>
+            <span class="track" aria-hidden="true"></span>
+            <span><strong>Pista para el impostor</strong><br><span class="hint">Verá el tema y una palabra relacionada.</span></span>
+          </label>
+          <p class="ai ${aiState()}"><span class="ai-dot" aria-hidden="true"></span><span>${aiText()}</span></p>
+        </section>
+        <details class="howto">
+          <summary>Cómo se juega</summary>
+          <ol>
+            <li><span>Elijan cuántos juegan, cuántos impostores habrá y escriban sus nombres.</span></li>
+            <li><span>Pasen el teléfono: cada uno mira su rol a solas. Los inocentes ven la palabra; el impostor no.</span></li>
+            <li><span>Empezando por quien diga la app, cada uno dice una palabra relacionada. El impostor tiene que disimular.</span></li>
+            <li><span>Al final de la ronda cada uno vota en secreto. El más votado sale y se revela si era impostor.</span></li>
+          </ol>
+          <p class="win">Los inocentes ganan si sacan a todos los impostores. Los impostores ganan si llegan a ser tantos como los inocentes.</p>
+        </details>
+      </main>
+      <div class="actionbar"><button type="button" class="btn primary big" data-a="play">Jugar</button></div>
+    </div>`;
+  }
+
+  function vLoading() {
+    return `<div class="screen">${gamebar("Preparando")}
+      <main class="content center">
+        <p class="eyebrow">Expediente N.º ${G.exp}</p>
+        <h2 class="h">La IA está eligiendo la palabra</h2>
+        <div class="redact-anim" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+        <p class="muted copy">Nadie la verá hasta que le toque su turno.</p>
+      </main>
+      <div class="actionbar"><button type="button" class="btn" data-a="use-local">Usar la lista incluida</button></div>
+    </div>`;
+  }
+
+  function vPass() {
+    const i = G.revealIdx, p = P(i), n = G.players.length;
+    const marks = G.players.map((q, j) => `<span class="pm ${j < i ? "done" : j === i ? "now" : ""}"></span>`).join("");
+    return `<div class="screen">${gamebar("Repartiendo roles")}
+      <main class="content center" style="${pcs(i)}">
+        ${G.note && i === 0 ? `<p class="note">${esc(G.note)}</p>` : ""}
+        <p class="eyebrow">Rol ${i + 1} de ${n}</p>
+        <div class="progress" aria-hidden="true">${marks}</div>
+        <p class="lead">Pásale el teléfono a</p>
+        <h2 class="bigname">${esc(p.name)}</h2>
+        <p class="muted">Que nadie más mire la pantalla.</p>
+      </main>
+      <div class="actionbar"><button type="button" class="btn primary big" data-a="show-role">Soy ${esc(p.name)}, ver mi rol</button></div>
+    </div>`;
+  }
+
+  function vRole() {
+    const i = G.revealIdx, p = P(i), imp = G.impostors.includes(i);
+    const last = i === G.players.length - 1;
+    const next = last ? "Ocultar y empezar" : `Ocultar y pasar a ${esc(P(i + 1).name)}`;
+    const head = `<header class="file-head"><span>Confidencial</span><span>Exp. N.º ${G.exp}</span></header>
+      <p class="label">Jugador</p><p class="agent" style="${pcs(i)}"><i aria-hidden="true"></i>${esc(p.name)}</p>`;
+    const body = imp
+      ? `<p class="label">Tu palabra secreta</p>
+         <p class="secret"><span class="redacted" role="img" aria-label="Palabra oculta"></span></p>
+         <div class="stamp-wrap"><span class="stamp">Impostor</span></div>
+         <p class="file-foot">No conoces la palabra. Escucha a los demás y di algo que encaje sin que te descubran.</p>
+         ${G.pista ? `<dl class="clue"><div><dt>Tema</dt><dd>${esc(G.cat)}</dd></div><div><dt>Pista</dt><dd>${esc(G.hint)}</dd></div></dl>` : ""}
+         ${G.impostors.length > 1 ? `<p class="hint">Hay ${G.impostors.length} impostores en esta partida. No sabes quiénes son los demás.</p>` : ""}`
+      : `<p class="label">Tu palabra secreta</p>
+         <p class="secret">${esc(G.word)}</p>
+         <p class="file-foot">Tema: ${esc(G.cat)}. Cuando te toque, di una palabra relacionada sin regalarle la respuesta al impostor.</p>`;
+    return `<div class="screen">${gamebar("Repartiendo roles")}
+      <main class="content center">
+        <article class="file">${head}${body}</article>
+      </main>
+      <div class="actionbar"><button type="button" class="btn primary big" data-a="hide-role">${next}</button></div>
+    </div>`;
+  }
+
+  function vRound() {
+    const order = roundOrder();
+    const rows = order.map((id, k) => `<li style="${pcs(id)}">
+        <span class="ord">${k + 1}</span><span class="dot" aria-hidden="true"></span>
+        <span class="pname">${esc(P(id).name)}</span>${k === 0 ? `<span class="tag">Empieza</span>` : ""}
+      </li>`).join("");
+    const outs = G.history.filter(h => !h.tie);
+    const outRows = outs.map(h => `<li class="out" style="${pcs(h.id)}">
+        <span class="dot" aria-hidden="true"></span><span class="pname">${esc(P(h.id).name)}</span>
+        <span class="tag ${h.imp ? "imp" : "inn"}">${h.imp ? "Impostor" : "Inocente"}</span>
+      </li>`).join("");
+    const impLeft = G.alive.filter(x => G.impostors.includes(x)).length;
+    return `<div class="screen">${gamebar(`Ronda ${G.round} · ${G.alive.length} en juego`)}
+      <main class="content">
+        <p class="eyebrow">Ronda ${G.round}${G.round > 1 ? ` · ${pl(impLeft, "impostor sigue", "impostores siguen")} en juego` : ""}</p>
+        <h2 class="h">Empieza <span class="hl">${esc(P(G.starter).name)}</span></h2>
+        <p class="copy muted">Por turnos, cada uno dice una palabra relacionada con la palabra secreta, sin decirla y sin repetir. Después, a votar.</p>
+        <ol class="rows" aria-label="Orden de la ronda">${rows}</ol>
+        ${outRows ? `<div class="section"><p class="label">Fuera de juego</p><ul class="rows">${outRows}</ul></div>` : ""}
+      </main>
+      <div class="actionbar"><button type="button" class="btn primary big" data-a="to-vote">Terminar ronda y votar</button></div>
+    </div>`;
+  }
+
+  function vVotePass() {
+    const v = G.voters[G.voteIdx];
+    const marks = G.voters.map((q, j) => `<span class="pm ${j < G.voteIdx ? "done" : j === G.voteIdx ? "now" : ""}"></span>`).join("");
+    return `<div class="screen">${gamebar(`Ronda ${G.round} · ${G.runoff ? "Desempate" : "Votación"}`)}
+      <main class="content center" style="${pcs(v)}">
+        <p class="eyebrow">${G.runoff ? "Desempate" : "Votación"} · voto ${G.voteIdx + 1} de ${G.voters.length}</p>
+        <div class="progress" aria-hidden="true">${marks}</div>
+        <p class="lead">Pásale el teléfono a</p>
+        <h2 class="bigname">${esc(P(v).name)}</h2>
+        <p class="muted">Tu voto es secreto.</p>
+      </main>
+      <div class="actionbar"><button type="button" class="btn primary big" data-a="open-vote">Soy ${esc(P(v).name)}, votar</button></div>
+    </div>`;
+  }
+
+  const SIL = `<svg class="sil" viewBox="0 0 60 66" aria-hidden="true"><circle cx="30" cy="20" r="13"/><path d="M5 66 C5 45 17 37 30 37 C43 37 55 45 55 66 Z"/></svg>`;
+
+  function vVote() {
+    const v = G.voters[G.voteIdx];
+    const cands = G.candidates.filter(c => c !== v);
+    const cards = cands.map(id => `<button type="button" class="suspect" id="sus-${id}" data-a="pick" data-id="${id}" aria-pressed="${G.sel === id}" style="${pcs(id)}">
+        ${SIL}<span class="placard">N.º ${String(id + 1).padStart(2, "0")}</span><span class="nm">${esc(P(id).name)}</span>
+      </button>`).join("");
+    const btn = G.sel == null
+      ? `<button type="button" class="btn primary big" disabled>Elige a un sospechoso</button>`
+      : `<button type="button" class="btn primary big" data-a="cast">Votar por ${esc(P(G.sel).name)}</button>`;
+    return `<div class="screen">${gamebar(`Ronda ${G.round} · ${G.runoff ? "Desempate" : "Votación"}`)}
+      <main class="content">
+        <p class="eyebrow">Voto secreto de ${esc(P(v).name)}</p>
+        <h2 class="h">¿Quién es el impostor?</h2>
+        ${G.runoff ? `<p class="copy muted">Desempate: solo puedes votar entre los empatados.</p>` : ""}
+        <div class="lineup" role="group" aria-label="Sospechosos">${cards}</div>
+      </main>
+      <div class="actionbar">${btn}</div>
+    </div>`;
+  }
+
+  function tallyMarks(n) {
+    if (!n) return "";
+    const groups = Math.ceil(n / 5);
+    let d = "";
+    for (let g = 0; g < groups; g++) {
+      const k = Math.min(5, n - g * 5), x0 = g * 30;
+      for (let i = 0; i < Math.min(k, 4); i++) d += `<line x1="${x0 + 3 + i * 6}" y1="3" x2="${x0 + 3 + i * 6}" y2="21"/>`;
+      if (k === 5) d += `<line x1="${x0}" y1="18" x2="${x0 + 24}" y2="6"/>`;
+    }
+    const w = groups * 30 - 4;
+    return `<svg width="${w}" height="24" viewBox="0 0 ${w} 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">${d}</svg>`;
+  }
+
+  function vTally() {
+    const max = G.tally[0].n;
+    const rows = G.tally.map(r => `<li class="${G.top.includes(r.id) ? "top" : ""} ${r.n === 0 ? "zero" : ""}" style="${pcs(r.id)}">
+        <span class="who"><span class="dot" aria-hidden="true"></span><span class="pname">${esc(P(r.id).name)}</span></span>
+        <span class="marks">${tallyMarks(r.n)}</span>
+        <span class="n" aria-label="${pl(r.n, "voto", "votos")}">${r.n}</span>
+      </li>`).join("");
+    let head, copy = "", actions;
+    if (G.top.length === 1) {
+      const nm = esc(P(G.top[0]).name);
+      head = `Sale <span class="hl">${nm}</span>`;
+      copy = `Es el más votado, con ${pl(max, "voto", "votos")}.`;
+      actions = `<button type="button" class="btn primary big" data-a="eliminate">Revelar si era impostor</button>`;
+    } else if (!G.runoff) {
+      head = "Empate";
+      copy = `${esc(joinY(G.top.map(id => P(id).name)))} tienen ${pl(max, "voto", "votos")} cada uno.`;
+      actions = `<button type="button" class="btn primary big" data-a="runoff">Desempatar entre ellos</button>
+                 <button type="button" class="btn" data-a="skip">Nadie sale esta ronda</button>`;
+    } else {
+      head = "Otro empate";
+      copy = "Nadie sale esta ronda. Sigan jugando y vuelvan a votar al final de la próxima.";
+      actions = `<button type="button" class="btn primary big" data-a="skip">Siguiente ronda</button>`;
+    }
+    return `<div class="screen">${gamebar(`Ronda ${G.round} · Recuento`)}
+      <main class="content">
+        <p class="eyebrow">Ronda ${G.round} · recuento${G.runoff ? " del desempate" : ""}</p>
+        <h2 class="h">${head}</h2>
+        <p class="copy muted">${copy}</p>
+        <ul class="rows tally" aria-label="Votos">${rows}</ul>
+      </main>
+      <div class="actionbar">${actions}</div>
+    </div>`;
+  }
+
+  function vReveal() {
+    const { id, imp, votes } = G.last;
+    const nm = esc(P(id).name);
+    const impLeft = G.alive.filter(x => G.impostors.includes(x)).length;
+    let copy;
+    if (imp) {
+      copy = impLeft === 0
+        ? (G.impostors.length > 1 ? "Era el último impostor que quedaba." : "Lo atraparon.")
+        : `Bien visto. Pero ${impLeft === 1 ? "todavía queda 1 impostor" : `todavía quedan ${impLeft} impostores`} entre ustedes.`;
+    } else {
+      copy = G.winner === "imp"
+        ? `${nm} era inocente, y ahora los impostores ya son tantos como los inocentes.`
+        : `${nm} era inocente. ${impLeft === 1 ? "El impostor sigue" : `Los ${impLeft} impostores siguen`} entre ustedes.`;
+    }
+    const btn = G.winner
+      ? `<button type="button" class="btn primary big" data-a="final">Ver el resultado</button>`
+      : `<button type="button" class="btn primary big" data-a="next-round">Siguiente ronda</button>`;
+    return `<div class="screen">${gamebar(`Ronda ${G.round} · Revelación`)}
+      <main class="content center" style="${pcs(id)}">
+        <p class="eyebrow">Ronda ${G.round} · sale con ${pl(votes, "voto", "votos")}</p>
+        <h2 class="bigname">${nm}</h2>
+        <div class="stamp-wrap"><span class="stamp xl ${imp ? "" : "safe"}">${imp ? "Impostor" : "Inocente"}</span></div>
+        <p class="copy">${copy}</p>
+      </main>
+      <div class="actionbar">${btn}</div>
+    </div>`;
+  }
+
+  function vEnd() {
+    const civWin = G.winner === "civ";
+    const many = G.impostors.length > 1;
+    const title = civWin ? "Ganan los inocentes" : (many ? "Ganan los impostores" : "Gana el impostor");
+    const impRows = G.impostors.map(id => {
+      const h = G.history.find(x => x.id === id);
+      return `<li style="${pcs(id)}"><span class="dot" aria-hidden="true"></span><span class="pname">${esc(P(id).name)}</span>
+        <span class="tag ${h ? "plain" : "imp"}">${h ? `Atrapado en la ronda ${h.round}` : "Sin descubrir"}</span></li>`;
+    }).join("");
+    const hist = G.history.map(h => h.tie
+      ? `<li><span class="ord">R${h.round}</span><span class="pname" style="font-weight:400">Empate, nadie salió</span></li>`
+      : `<li style="${pcs(h.id)}"><span class="ord">R${h.round}</span><span class="pname">${esc(P(h.id).name)}</span>
+           <span class="tag ${h.imp ? "imp" : "inn"}">${h.imp ? "Impostor" : "Inocente"}</span></li>`).join("");
+    return `<div class="screen">${gamebar("Caso cerrado")}
+      <main class="content">
+        <p class="eyebrow">Caso cerrado · Exp. N.º ${G.exp}</p>
+        <h2 class="h">${title}</h2>
+        <article class="file">
+          <header class="file-head"><span>Desclasificado</span><span>${G.src === "ai" ? "Elegida por la IA" : "Lista incluida"}</span></header>
+          <p class="label">La palabra era</p>
+          <p class="secret">${esc(G.word)}</p>
+          <p class="file-foot">Tema: ${esc(G.cat)}</p>
+        </article>
+        <div class="section"><p class="label">${many ? "Los impostores" : "El impostor"}</p><ul class="rows">${impRows}</ul></div>
+        ${hist ? `<div class="section"><p class="label">Rondas</p><ol class="rows">${hist}</ol></div>` : ""}
+      </main>
+      <div class="actionbar">
+        <button type="button" class="btn primary big" data-a="again">Otra partida</button>
+        <button type="button" class="btn" data-a="setup">Cambiar jugadores</button>
+      </div>
+    </div>`;
+  }
+
+  function vExit() {
+    return `<div class="scrim" data-a="exit-cancel">
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="exit-h" data-stop="1">
+        <h3 id="exit-h">¿Terminar la partida?</h3>
+        <p class="muted">Se pierde el progreso y vuelven a la configuración. Los nombres se quedan guardados.</p>
+        <button type="button" class="btn primary" id="exit-cancel" data-a="exit-cancel">Seguir jugando</button>
+        <button type="button" class="btn danger" data-a="exit-confirm">Terminar partida</button>
+      </div>
+    </div>`;
+  }
+
+  const VIEWS = { setup: vSetup, loading: vLoading, pass: vPass, role: vRole, round: vRound, votePass: vVotePass, vote: vVote, tally: vTally, reveal: vReveal, end: vEnd };
+
+  function render() {
+    if (screen !== "setup" && !G) screen = "setup";
+    $app.innerHTML = VIEWS[screen]() + (confirmExit && G ? vExit() : "");
+    if (screen !== lastScreen) { window.scrollTo(0, 0); lastScreen = screen; }
+    if (confirmExit) {
+      document.getElementById("exit-cancel")?.focus();
+    } else if (focusAfter) {
+      const el = document.getElementById(focusAfter);
+      if (el && !el.disabled) el.focus({ preventScroll: true });
+      focusAfter = null;
+    }
+  }
+
+  /* ---------- Actions ---------- */
+  function act(a, el) {
+    switch (a) {
+      case "inc-p": S.count = Math.min(MAX_P, S.count + 1); focusAfter = S.count >= MAX_P ? "dec-p" : "inc-p"; break;
+      case "dec-p": S.count = Math.max(MIN_P, S.count - 1); S.impostors = Math.min(S.impostors, maxImp(S.count)); focusAfter = S.count <= MIN_P ? "inc-p" : "dec-p"; break;
+      case "inc-i": S.impostors = Math.min(maxImp(S.count), S.impostors + 1); focusAfter = S.impostors >= maxImp(S.count) ? "dec-i" : "inc-i"; break;
+      case "dec-i": S.impostors = Math.max(1, S.impostors - 1); focusAfter = S.impostors <= 1 ? "inc-i" : "dec-i"; break;
+      case "tema": S.tema = el.dataset.v; focusAfter = "tema-" + S.tema; break;
+      case "play": case "again": saveS(); startGame(); return;
+      case "use-local": if (ctl) ctl.abort(); return;
+      case "show-role": screen = "role"; break;
+      case "hide-role":
+        G.revealIdx++;
+        if (G.revealIdx < G.players.length) screen = "pass"; else startRound();
+        break;
+      case "to-vote": startVote(G.alive, false); break;
+      case "open-vote": G.sel = null; screen = "vote"; break;
+      case "pick": G.sel = Number(el.dataset.id); focusAfter = "sus-" + G.sel; break;
+      case "cast":
+        if (G.sel == null) return;
+        G.votes[G.voters[G.voteIdx]] = G.sel;
+        G.sel = null; G.voteIdx++;
+        if (G.voteIdx < G.voters.length) screen = "votePass"; else finishVote();
+        break;
+      case "eliminate": eliminate(); break;
+      case "runoff": startVote(G.top, true); break;
+      case "skip": G.history.push({ round: G.round, tie: true }); G.round++; startRound(); break;
+      case "next-round": G.round++; startRound(); break;
+      case "final": screen = "end"; break;
+      case "setup": G = null; screen = "setup"; break;
+      case "exit": confirmExit = true; break;
+      case "exit-cancel": confirmExit = false; break;
+      case "exit-confirm":
+        gameToken++; if (ctl) ctl.abort(); ctl = null;
+        G = null; confirmExit = false; screen = "setup";
+        break;
+      default: return;
+    }
+    if (a.endsWith("-p") || a.endsWith("-i") || a === "tema") saveS();
+    render();
+  }
+
+  $app.addEventListener("click", e => {
+    const t = e.target.closest("[data-a]");
+    if (!t || t.disabled) return;
+    if (t.classList.contains("scrim") && e.target.closest("[data-stop]")) return;
+    act(t.dataset.a, t);
+  });
+  $app.addEventListener("input", e => {
+    const t = e.target;
+    if (t.dataset && t.dataset.name != null) { S.names[Number(t.dataset.name)] = t.value; saveS(); }
+  });
+  $app.addEventListener("change", e => {
+    if (e.target.id === "opt-pista") { S.pista = e.target.checked; saveS(); }
+  });
+  $app.addEventListener("keydown", e => {
+    const t = e.target;
+    if (e.key === "Enter" && t.dataset && t.dataset.name != null) {
+      e.preventDefault();
+      const next = document.getElementById("name-" + (Number(t.dataset.name) + 1));
+      if (next) next.focus(); else t.blur();
+    }
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && confirmExit) { confirmExit = false; render(); }
+  });
+
+  /* ---------- Boot (keeps a game in progress across page updates) ---------- */
+  function start(data) {
+    if (data && data.G && data.screen && data.screen !== "loading") {
+      G = data.G; screen = data.screen;
+      if (data.S) S = Object.assign(S, data.S);
+    }
+    render();
+  }
+  try {
+    const hot = window.claude && window.claude.hot;
+    if (hot && typeof hot.snapshot === "function") hot.snapshot(() => ({ S, G, screen }));
+    if (hot && typeof hot.ready === "function") hot.ready(start);
+    else start((hot && hot.data) || {});
+  } catch (e) { start({}); }
+})();
+</script>
+</body>
+</html>
