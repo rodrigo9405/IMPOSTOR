@@ -1,3 +1,5 @@
+<p align="center"><img src="logo.webp" width="200" alt="El Impostor"></p>
+
 # Impostor
 
 Juego de fiesta para jugar en grupo con un solo teléfono. Todos conocen la palabra secreta menos el impostor, que tiene que disimular.
